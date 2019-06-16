@@ -1,0 +1,65 @@
+{% set version = "1.0.0" %}
+
+package:
+  name: scipy
+  version: {{ version }}
+
+source:
+  url: https://github.com/scipy/scipy/archive/v{{ version }}.tar.gz
+  sha256: c423a4511684554958dab55f2877df78e765b44f8eef46d5425891d6ac3b49bc
+
+build:
+  number: 0
+  # conda 4.4+ can use this
+  skip: True  # [blas_impl == 'openblas' and win]
+  requires_features:
+    blas: {{ blas_impl }}
+  # this is for conda 4.3 and below
+  features:
+    - nomkl    # [x86 and blas_impl != 'mkl']
+
+requirements:
+  build:
+    # on windows, Parallel studio activates the appropriate c/cxx compiler
+    - {{ compiler('c') }}        # [not win]
+    - {{ compiler('cxx') }}      # [not win]
+    - {{ compiler('fortran') }}
+  host:
+    - python
+    - setuptools
+    - cython
+    - numpy
+    - mkl-devel  {{ mkl }}  # [blas_impl == 'mkl']
+    - openblas-devel {{ openblas }}  # [blas_impl == 'openblas']
+    - nomkl  # [blas_impl == 'openblas']
+    - msinttypes   # [win and vc<14]
+  run:
+    - python
+    - {{ pin_compatible('numpy') }}
+
+test:
+  requires:
+    - pytest
+    - mpmath
+    - nomkl  # [blas_impl == 'openblas']
+  commands:
+    - conda inspect linkages -p $PREFIX scipy  # [not win]
+    - conda inspect objects -p $PREFIX scipy  # [osx]
+
+about:
+  home: http://www.scipy.org/
+  license: BSD 3-Clause
+  license_file: LICENSE.txt
+  summary: Scientific Library for Python
+  description: |
+    SciPy is a Python-based ecosystem of open-source software for mathematics,
+    science, and engineering.
+  doc_url: http://www.scipy.org/docs.html
+  dev_url: https://github.com/scipy/scipy
+
+extra:
+  recipe-maintainers:
+    - jakirkham
+    - msarahan
+    - rgommers
+    - ocefpaf
